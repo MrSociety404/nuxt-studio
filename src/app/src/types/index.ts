@@ -6,6 +6,7 @@ import type { Repository } from './git'
 import type { ComponentMeta } from './component'
 import type { MarkdownParsingOptions, SyntaxHighlightTheme } from './content'
 import type { CollectionInfo } from '@nuxt/content'
+import type { MediaConfig } from './media'
 
 export * from './file'
 export * from './item'
@@ -22,15 +23,10 @@ export * from './content'
 export * from './form'
 export * from './ai'
 
-export interface MediaUploadConfig {
-  external: boolean
-  maxFileSize: number
-  allowedTypes: string[]
-}
-
 export interface StudioHost {
   meta: {
     dev: boolean
+    media?: MediaConfig
     ai: {
       enabled: boolean
       experimental: {
@@ -44,7 +40,6 @@ export interface StudioHost {
     getComponents: () => ComponentMeta[]
     defaultLocale: string
     getHighlightTheme: () => SyntaxHighlightTheme
-    media?: MediaUploadConfig
   }
   on: {
     routeChange: (fn: (to: RouteLocationNormalized, from: RouteLocationNormalized) => void) => void

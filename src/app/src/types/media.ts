@@ -1,28 +1,19 @@
 import type { BaseItem } from './item'
 
-export interface MediaItem extends BaseItem {
-  [key: string]: unknown
-  /** Base64 data URL for local files */
-  raw?: string
-  /** External URL if stored in OSS (Object Storage Service) */
-  ossUrl?: string
-  /** Storage key in OSS provider (used for matching after refresh) */
-  ossKey?: string
-  /** Metadata from OSS provider */
-  ossMetadata?: Record<string, unknown>
+export interface MediaConfig {
+  external: boolean
+  maxFileSize: number
+  allowedTypes: string[]
 }
 
-/**
- * Check if a media item is stored in an external OSS provider
- */
-export function isOSSMedia(item: MediaItem): boolean {
-  return !!item.ossUrl
+export interface MediaItem extends BaseItem {
+  [key: string]: unknown
 }
 
 /**
  * Result returned by a successful OSS upload
  */
-export interface OSSUploadResult {
+export interface ExternalMedia {
   /** The public URL of the uploaded file */
   url: string
   /** Alt text / description for the file */
@@ -37,10 +28,7 @@ export interface OSSUploadResult {
   metadata?: Record<string, unknown>
 }
 
-/**
- * Error returned by a failed OSS upload
- */
-export interface OSSUploadError {
+export interface ExternalMediaError {
   code: 'FILE_TOO_LARGE' | 'INVALID_TYPE' | 'UPLOAD_FAILED' | 'AUTH_REQUIRED'
   message: string
 }
@@ -48,6 +36,8 @@ export interface OSSUploadError {
 /**
  * Response from an OSS upload endpoint
  */
-export type OSSUploadResponse
-  = { success: true, data: OSSUploadResult }
-    | { success: false, error: OSSUploadError }
+export interface ExternalUploadResponse {
+  success: boolean,
+  data?: ExternalMedia,
+  error?: ExternalMediaError,
+}

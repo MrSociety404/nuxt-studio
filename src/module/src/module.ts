@@ -5,7 +5,10 @@ import { resolve } from 'node:path'
 import { readFile } from 'node:fs/promises'
 import fsDriver from 'unstorage/drivers/fs'
 import { createStorage } from 'unstorage'
-import { getAssetsStorageDevTemplate, getAssetsStorageTemplate } from './templates'
+import { getAssetsStorageDevTemplate, getAssetsStorageTemplate, getExternalAssetsStorageTemplate } from './templates'
+import type { Storage } from 'unstorage'
+
+const ASSETS_TEMPLATE = 'studio-assets.mjs'
 import { version } from '../../../package.json'
 import { setupDevMode } from './dev'
 import { validateAuthConfig } from './auth'
@@ -35,13 +38,23 @@ interface MetaOptions {
 interface MediaUploadOptions {
   /**
    * Enable external storage for media uploads.
-   * When enabled, media files are uploaded to external storage (e.g., Cloudflare R2, AWS S3)
-   * instead of being committed to the Git repository.
+   * When enabled, media files are uploaded to S3-compatible storage (AWS S3, Cloudflare R2,
+   * MinIO, DigitalOcean Spaces, Backblaze B2, etc.) instead of being committed to Git.
    *
-   * Requires implementing three REST endpoints:
-   * - POST /api/studio/medias/upload - Upload media
-   * - GET /api/studio/medias - List media
-   * - DELETE /api/studio/medias/{path} - Delete media
+   * Uses Unstorage S3 driver on server, HTTP driver on client.
+   * Requires implementing server routes:
+   * - POST /api/studio/medias/upload - Upload with validation
+   * - ALL /api/studio/medias/[...path] - Proxy to S3 storage (GET/PUT/DELETE)
+   *
+   * Required environment variables:
+   * - S3_ACCESS_KEY_ID - Storage access key
+   * - S3_SECRET_ACCESS_KEY - Storage secret key
+   * - S3_ENDPOINT - Storage endpoint URL
+   * - S3_BUCKET - Bucket name
+   * - S3_REGION - Region (optional, defaults to 'auto')
+   * - S3_PUBLIC_URL - Public URL for uploaded files
+   *
+   * See playground/docus/server/api/studio/medias/ for reference implementation.
    *
    * @default false
    */
@@ -416,6 +429,7 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.experimental = nuxt.options.experimental || {}
     nuxt.options.experimental.checkOutdatedBuildInterval = 1000 * 30
 
+    // Public runtime config
     nuxt.options.runtimeConfig.public.studio = {
       route: options.route!,
       dev: Boolean(options.dev),
@@ -440,6 +454,7 @@ export default defineNuxtModule<ModuleOptions>({
       media: options.media,
     }
 
+    // Studio runtime config
     nuxt.options.runtimeConfig.studio = {
       ai: {
         apiKey: options.ai?.apiKey,
@@ -477,6 +492,7 @@ export default defineNuxtModule<ModuleOptions>({
       markdown: nuxt.options.content?.build?.markdown || {},
     }
 
+    // Vite config
     nuxt.options.vite = defu(nuxt.options.vite, {
       vue: {
         template: {
@@ -503,21 +519,57 @@ export default defineNuxtModule<ModuleOptions>({
       ? runtime('./plugins/studio.client.dev')
       : runtime('./plugins/studio.client'))
 
-    const assetsStorage = createStorage({
-      driver: fsDriver({
-        base: resolve(nuxt.options.rootDir, 'public'),
-      }),
-    })
+    let publicAssetsStorage: Storage | undefined = undefined
 
-    addTemplate({
-      filename: 'studio-public-assets.mjs',
-      getContents: () => options.dev
-        ? getAssetsStorageDevTemplate(assetsStorage, nuxt)
-        : getAssetsStorageTemplate(assetsStorage, nuxt),
-    })
+    // Setup S3-compatible storage for external medias
+    const hasS3Config = Boolean(
+      process.env.S3_ACCESS_KEY_ID
+      && process.env.S3_SECRET_ACCESS_KEY
+      && process.env.S3_ENDPOINT
+      && process.env.S3_BUCKET,
+    )
+
+    if (options.media?.external && hasS3Config) {
+      nuxt.options.nitro.storage = {
+        ...nuxt.options.nitro.storage,
+        s3: {
+          driver: 's3',
+          accessKeyId: process.env.S3_ACCESS_KEY_ID,
+          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+          endpoint: process.env.S3_ENDPOINT,
+          bucket: process.env.S3_BUCKET,
+          region: process.env.S3_REGION || 'auto',
+        },
+      }
+
+      addTemplate({
+        filename: ASSETS_TEMPLATE,
+        getContents: () => getExternalAssetsStorageTemplate(),
+      })
+    }
+    // Setup local storage for public assets
+    else {
+      if (options.media?.external && !hasS3Config) {
+        logger.warn('External media storage is enabled but required S3 environment variables (S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_ENDPOINT, S3_BUCKET) are not set. Falling back to default assets storage.')
+      }
+
+      publicAssetsStorage = createStorage({
+        driver: fsDriver({
+          base: resolve(nuxt.options.rootDir, 'public'),
+        }),
+      })
+
+      addTemplate({
+        filename: ASSETS_TEMPLATE,
+        getContents: () => options.dev
+          ? getAssetsStorageDevTemplate()
+          : getAssetsStorageTemplate(publicAssetsStorage!),
+      })
+    }
+
 
     if (options.dev) {
-      setupDevMode(nuxt, runtime, assetsStorage)
+      setupDevMode(nuxt, runtime, publicAssetsStorage)
     }
 
     /* Server routes */
