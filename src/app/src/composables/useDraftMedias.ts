@@ -30,6 +30,27 @@ export const useDraftMedias = createSharedComposable((host: StudioHost, gitProvi
     getStatus,
   } = useDraftBase('media', host, gitProvider, storage)
 
+  async function createFolder(parentFsPath: string): Promise<string | undefined> {
+    try {
+      const gitkeepFsPath = joinURL(parentFsPath, '.gitkeep')
+      const gitKeepMedia: MediaItem = {
+        id: joinURL(VIRTUAL_MEDIA_COLLECTION_NAME, gitkeepFsPath),
+        fsPath: gitkeepFsPath,
+        stem: generateStemFromFsPath(gitkeepFsPath),
+        extension: '',
+      }
+
+      await host.media.upsert(gitkeepFsPath, gitKeepMedia)
+      await create(gitkeepFsPath, gitKeepMedia)
+
+      await hooks.callHook('studio:draft:media:updated', { caller: 'useDraftMedias.createFolder' })
+
+      return gitkeepFsPath
+    } catch (error) {
+      showError('Error creating folder', (error as Error).message)
+    }
+  }
+
   async function upload(parentFsPath: string, file: File) {
     try {
       const draftItem = await fileToDraftItem(parentFsPath, file)
@@ -135,6 +156,7 @@ export const useDraftMedias = createSharedComposable((host: StudioHost, gitProvi
     remove,
     revert,
     revertAll,
+    createFolder,
     rename,
     load,
     selectByFsPath,

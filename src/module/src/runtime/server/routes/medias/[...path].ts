@@ -45,31 +45,32 @@ export default eventHandler(async (event) => {
     const body = await readBody(event)
 
     if (!body.raw) {
-      throw createError({ statusCode: 400, message: 'Raw data is required' })
+      await storage.setItem(key, body)
+    } else {
+      const { maxFileSize, allowedTypes } = useRuntimeConfig(event).public.studio.media
+
+      const raw = body.raw as string
+      const [meta, data] = raw.split(';base64,')
+      const mimeType = meta!.replace('data:', '')
+
+      const approximateSize = (data!.length * 3) / 4
+      if (approximateSize > maxFileSize) {
+        throw createError({ statusCode: 413, message: `File size exceeds maximum of ${maxFileSize / 1024 / 1024}MB` })
+      }
+
+      if (!allowedTypes.some((t: string) => mimeType.startsWith(t.replace('*', '')))) {
+        throw createError({ statusCode: 415, message: `File type "${mimeType}" is not allowed` })
+      }
+
+      const binaryString = atob(data!)
+      const bytes = new Uint8Array(binaryString.length)
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i)!
+      }
+
+      await storage.setItemRaw(key, bytes)
     }
 
-    const { maxFileSize, allowedTypes } = useRuntimeConfig(event).public.studio.media
-
-    const raw = body.raw as string
-    const [meta, data] = raw.split(';base64,')
-    const mimeType = meta!.replace('data:', '')
-
-    const approximateSize = (data!.length * 3) / 4
-    if (approximateSize > maxFileSize) {
-      throw createError({ statusCode: 413, message: `File size exceeds maximum of ${maxFileSize / 1024 / 1024}MB` })
-    }
-
-    if (!allowedTypes.some((t: string) => mimeType.startsWith(t.replace('*', '')))) {
-      throw createError({ statusCode: 415, message: `File type "${mimeType}" is not allowed` })
-    }
-
-    const binaryString = atob(data!)
-    const bytes = new Uint8Array(binaryString.length)
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i)!
-    }
-
-    await storage.setItemRaw(key, bytes)
     return 'OK'
   }
 
