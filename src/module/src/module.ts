@@ -561,7 +561,6 @@ export default defineNuxtModule<ModuleOptions>({
       route: '/sw.js',
       handler: runtime('./server/routes/sw'),
     })
-
   },
 })
 

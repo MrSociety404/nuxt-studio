@@ -1,9 +1,8 @@
 import { prefixStorage } from 'unstorage'
 import { joinURL, withLeadingSlash } from 'ufo'
 import { createError, eventHandler, readBody } from 'h3'
-import { useRuntimeConfig } from '#imports'
 // @ts-expect-error useStorage is not defined in .nuxt/imports.d.ts
-import { useStorage } from '#imports'
+import { useRuntimeConfig, useStorage } from '#imports'
 import { VIRTUAL_MEDIA_COLLECTION_NAME, EXTERNAL_STORAGE_PREFIX } from 'nuxt-studio/app/utils'
 import { requireStudioAuth } from '../../utils/auth'
 
@@ -46,7 +45,8 @@ export default eventHandler(async (event) => {
 
     if (!body.raw) {
       await storage.setItem(key, body)
-    } else {
+    }
+    else {
       const { maxFileSize, allowedTypes } = useRuntimeConfig(event).public.studio.media
 
       const raw = body.raw as string

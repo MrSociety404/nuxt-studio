@@ -13,7 +13,6 @@ import { useError } from './useError'
 const hooks = useHooks()
 const { showError } = useError()
 
-
 export const useDraftMedias = createSharedComposable((host: StudioHost, gitProvider: ReturnType<typeof useGitProvider>) => {
   const {
     isLoading,
@@ -46,7 +45,8 @@ export const useDraftMedias = createSharedComposable((host: StudioHost, gitProvi
       await hooks.callHook('studio:draft:media:updated', { caller: 'useDraftMedias.createFolder' })
 
       return gitkeepFsPath
-    } catch (error) {
+    }
+    catch (error) {
       showError('Error creating folder', (error as Error).message)
     }
   }
@@ -58,7 +58,8 @@ export const useDraftMedias = createSharedComposable((host: StudioHost, gitProvi
       await create(draftItem.fsPath, draftItem.modified!)
 
       await hooks.callHook('studio:draft:media:updated', { caller: 'useDraftMedias.upload' })
-    } catch (error) {
+    }
+    catch (error) {
       showError('Error uploading media', (error as Error).message)
     }
   }

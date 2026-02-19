@@ -1,12 +1,11 @@
 import type { StudioUser } from './user'
 import type { DatabaseItem } from './database'
 import type { RouteLocationNormalized } from 'vue-router'
-import type { MediaItem } from './media'
+import type { MediaItem, MediaConfig } from './media'
 import type { Repository } from './git'
 import type { ComponentMeta } from './component'
 import type { MarkdownParsingOptions, SyntaxHighlightTheme } from './content'
 import type { CollectionInfo } from '@nuxt/content'
-import type { MediaConfig } from './media'
 
 export * from './file'
 export * from './item'
