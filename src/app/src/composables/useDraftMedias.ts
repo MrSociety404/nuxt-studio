@@ -35,6 +35,8 @@ export const useDraftMedias = createSharedComposable((host: StudioHost, gitProvi
       const draftItem = await fileToDraftItem(parentFsPath, file)
       await host.media.upsert(draftItem.fsPath, draftItem.modified!)
       await create(draftItem.fsPath, draftItem.modified!)
+
+      await hooks.callHook('studio:draft:media:updated', { caller: 'useDraftMedias.upload' })
     } catch (error) {
       showError('Error uploading media', (error as Error).message)
     }
