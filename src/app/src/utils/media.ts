@@ -3,5 +3,3 @@ export function generateStemFromFsPath(fsPath: string) {
 }
 
 export const VIRTUAL_MEDIA_COLLECTION_NAME = 'public-assets' as const
-
-export const EXTERNAL_STORAGE_PREFIX = 'studio' as const

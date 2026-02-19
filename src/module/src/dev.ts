@@ -3,7 +3,8 @@ import { resolve } from 'node:path'
 import type { Nuxt } from '@nuxt/schema'
 import type { ViteDevServer } from 'vite'
 import type { Storage } from 'unstorage'
-import { VIRTUAL_MEDIA_COLLECTION_NAME } from 'nuxt-studio/app/utils'
+
+import { VIRTUAL_MEDIA_COLLECTION_NAME } from './utils/constants'
 
 export function setupDevMode(
   nuxt: Nuxt,

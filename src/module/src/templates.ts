@@ -1,6 +1,6 @@
 import type { Storage } from 'unstorage'
 import { withLeadingSlash } from 'ufo'
-import { VIRTUAL_MEDIA_COLLECTION_NAME } from 'nuxt-studio/app/utils'
+import { VIRTUAL_MEDIA_COLLECTION_NAME } from './utils/constants'
 
 export async function getAssetsDefaultStorageDevTemplate() {
   return [
