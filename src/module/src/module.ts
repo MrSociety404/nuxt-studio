@@ -1,17 +1,11 @@
-import { defineNuxtModule, createResolver, addPlugin, extendViteConfig, addServerHandler, addTemplate, addServerImports, useLogger } from '@nuxt/kit'
+import { defineNuxtModule, createResolver, addPlugin, extendViteConfig, addServerHandler, addServerImports, useLogger } from '@nuxt/kit'
 import { createHash } from 'node:crypto'
 import { defu } from 'defu'
-import { resolve } from 'node:path'
-import { readFile } from 'node:fs/promises'
-import fsDriver from 'unstorage/drivers/fs'
-import { createStorage } from 'unstorage'
-import { getAssetsStorageDevTemplate, getAssetsStorageTemplate, getExternalAssetsStorageTemplate } from './templates'
-import type { Storage } from 'unstorage'
-
-const ASSETS_TEMPLATE = 'studio-assets.mjs'
 import { version } from '../../../package.json'
 import { setupDevMode } from './dev'
 import { validateAuthConfig } from './auth'
+import { setExternalMediaStorage, setDefaultMediaStorage } from './medias'
+import { setAIFeature } from './ai'
 
 const logger = useLogger('nuxt-studio')
 
@@ -392,26 +386,9 @@ export default defineNuxtModule<ModuleOptions>({
       options.ai.apiKey = process.env.AI_GATEWAY_API_KEY
     }
 
-    // Default AI context
     const isAIEnabled = Boolean(options.ai?.apiKey)
     if (isAIEnabled) {
-      let packageJsonContext: { title?: string, description?: string } = {}
-      if (!options.ai!.context?.title || !options.ai!.context?.description) {
-        // Read package.json for default title and description
-        try {
-          const pkgPath = resolve(nuxt.options.rootDir, 'package.json')
-          const pkgContent = await readFile(pkgPath, 'utf-8')
-          const pkg = JSON.parse(pkgContent)
-          packageJsonContext = {
-            title: pkg.name,
-            description: pkg.description,
-          }
-        }
-        catch { /* ignore errors reading package.json */ }
-      }
-
-      options.ai!.context!.title = options.ai!.context?.title || packageJsonContext.title
-      options.ai!.context!.description = options.ai!.context?.description || packageJsonContext.description
+      await setAIFeature(options, nuxt, runtime)
     }
 
     // Enable checkoutOutdatedBuildInterval to detect new deployments
@@ -518,46 +495,13 @@ export default defineNuxtModule<ModuleOptions>({
       ? runtime('./plugins/studio.client.dev')
       : runtime('./plugins/studio.client'))
 
-    let publicAssetsStorage: Storage | undefined = undefined
-
+    let publicAssetsStorage
     if (isExternalMediaEnabled) {
-      nuxt.options.nitro.storage = {
-        ...nuxt.options.nitro.storage,
-        s3: {
-          driver: 's3',
-          accessKeyId: process.env.S3_ACCESS_KEY_ID,
-          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
-          endpoint: process.env.S3_ENDPOINT,
-          bucket: process.env.S3_BUCKET,
-          region: process.env.S3_REGION || 'auto',
-        },
-      }
-
-      addTemplate({
-        filename: ASSETS_TEMPLATE,
-        getContents: () => getExternalAssetsStorageTemplate(),
-      })
+      setExternalMediaStorage(nuxt, runtime)
     }
-    // Setup local storage for public assets
     else {
-      if (options.media?.external && !isExternalMediaEnabled) {
-        logger.warn('External media storage is enabled but required S3 environment variables (S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_ENDPOINT, S3_BUCKET, S3_PUBLIC_URL) are not set. Falling back to default assets storage.')
-      }
-
-      publicAssetsStorage = createStorage({
-        driver: fsDriver({
-          base: resolve(nuxt.options.rootDir, 'public'),
-        }),
-      })
-
-      addTemplate({
-        filename: ASSETS_TEMPLATE,
-        getContents: () => options.dev
-          ? getAssetsStorageDevTemplate()
-          : getAssetsStorageTemplate(publicAssetsStorage!),
-      })
+      publicAssetsStorage = setDefaultMediaStorage(nuxt, options)
     }
-
 
     if (options.dev) {
       setupDevMode(nuxt, runtime, publicAssetsStorage)
@@ -606,22 +550,6 @@ export default defineNuxtModule<ModuleOptions>({
       handler: runtime('./server/routes/sw'),
     })
 
-    if (isAIEnabled) {
-      addServerHandler({
-        method: 'post',
-        route: '/__nuxt_studio/ai/generate',
-        handler: runtime('./server/routes/ai/generate.post'),
-      })
-
-      // Only register analyze handler if experimental collectionContext is enabled
-      if (options.ai?.experimental?.collectionContext) {
-        addServerHandler({
-          method: 'post',
-          route: '/__nuxt_studio/ai/analyze',
-          handler: runtime('./server/routes/ai/analyze.post'),
-        })
-      }
-    }
   },
 })
 

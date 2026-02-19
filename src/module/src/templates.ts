@@ -43,7 +43,7 @@ export async function getExternalAssetsStorageTemplate() {
     '',
     'export const externalAssetsStorage = createStorage({',
     '  driver: httpDriver({',
-    '    base: \'/api/studio/medias\'',
+    '    base: \'/__nuxt_studio/medias\'',
     '  })',
     '})',
     'export const publicAssetsStorage = null',

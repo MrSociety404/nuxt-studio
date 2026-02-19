@@ -1,16 +1,18 @@
 import { prefixStorage } from 'unstorage'
 import { joinURL, withLeadingSlash } from 'ufo'
-import { requireStudioAuth } from '../../../utils/studio-auth'
+import { createError, eventHandler, readBody } from 'h3'
+import { useRuntimeConfig } from '#imports'
+// @ts-expect-error useStorage is not defined in .nuxt/imports.d.ts
+import { useStorage } from '#imports'
 import { VIRTUAL_MEDIA_COLLECTION_NAME, EXTERNAL_STORAGE_PREFIX } from 'nuxt-studio/app/utils'
+import { requireStudioAuth } from '../../utils/auth'
 
-export default defineEventHandler(async (event) => {
+export default eventHandler(async (event) => {
   await requireStudioAuth(event)
-
-  const { maxFileSize, allowedTypes } = useRuntimeConfig(event).public.studio.media
 
   const storage = prefixStorage(useStorage('s3'), `${EXTERNAL_STORAGE_PREFIX}/`)
 
-  const path = event.path.replace('/api/studio/medias/', '')
+  const path = event.path.replace('/__nuxt_studio/medias/', '')
   const key = path.replace(/\//g, ':').replace(new RegExp(`^${VIRTUAL_MEDIA_COLLECTION_NAME}:`), '')
 
   // GET => getItem / getKeys
@@ -27,7 +29,6 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 404, message: 'Item not found' })
     }
 
-    // Reconstruct media item with S3 public URL (mirrors dev public route pattern)
     const publicUrl = process.env.S3_PUBLIC_URL!
     const fsPath = withLeadingSlash(key.replace(/:/g, '/'))
     return {
@@ -39,7 +40,7 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // PUT => setKey => upload media file
+  // PUT => upload media file
   if (event.method === 'PUT') {
     const body = await readBody(event)
 
@@ -47,11 +48,12 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, message: 'Raw data is required' })
     }
 
+    const { maxFileSize, allowedTypes } = useRuntimeConfig(event).public.studio.media
+
     const raw = body.raw as string
     const [meta, data] = raw.split(';base64,')
     const mimeType = meta!.replace('data:', '')
 
-    // Approximate binary size from base64 length
     const approximateSize = (data!.length * 3) / 4
     if (approximateSize > maxFileSize) {
       throw createError({ statusCode: 413, message: `File size exceeds maximum of ${maxFileSize / 1024 / 1024}MB` })
@@ -64,11 +66,10 @@ export default defineEventHandler(async (event) => {
     const binaryString = atob(data!)
     const bytes = new Uint8Array(binaryString.length)
     for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i)
+      bytes[i] = binaryString.charCodeAt(i)!
     }
 
     await storage.setItemRaw(key, bytes)
-
     return 'OK'
   }
 
