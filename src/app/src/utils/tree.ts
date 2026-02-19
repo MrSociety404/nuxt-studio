@@ -57,7 +57,6 @@ TreeItem[] {
     return dbItems
   }
 
-
   let virtualDbItems = addDeletedDraftItemsInDbItems(dbItems, deletedDraftItems)
 
   for (const dbItem of virtualDbItems) {

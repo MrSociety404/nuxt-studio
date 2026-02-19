@@ -44,15 +44,6 @@ interface MediaUploadOptions {
    * - S3_PUBLIC_URL - Public URL for uploaded files
    */
   external?: boolean
-  /**
-   * Maximum file size in bytes.
-   */
-  maxFileSize?: number
-  /**
-   * Allowed MIME types for upload.
-   * Supports wildcards like 'image/*'.
-   */
-  allowedTypes?: string[]
 }
 
 interface RepositoryOptions {
@@ -339,8 +330,6 @@ export default defineNuxtModule<ModuleOptions>({
     },
     media: {
       external: false,
-      maxFileSize: 10 * 1024 * 1024, // 10MB
-      allowedTypes: ['image/*', 'video/*', 'audio/*'],
     },
   },
   async setup(options, nuxt) {

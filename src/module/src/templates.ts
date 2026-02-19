@@ -2,7 +2,7 @@ import type { Storage } from 'unstorage'
 import { withLeadingSlash } from 'ufo'
 import { VIRTUAL_MEDIA_COLLECTION_NAME } from 'nuxt-studio/app/utils'
 
-export async function getAssetsStorageDevTemplate() {
+export async function getAssetsDefaultStorageDevTemplate() {
   return [
     'import { createStorage } from \'unstorage\'',
     'import httpDriver from \'unstorage/drivers/http\'',
@@ -12,7 +12,7 @@ export async function getAssetsStorageDevTemplate() {
   ].join('\n')
 }
 
-export async function getAssetsStorageTemplate(assetsStorage: Storage) {
+export async function getAssetsDefaultStorageTemplate(assetsStorage: Storage) {
   const keys = await assetsStorage.getKeys()
 
   return [
@@ -36,7 +36,7 @@ export async function getAssetsStorageTemplate(assetsStorage: Storage) {
   ].join('\n')
 }
 
-export async function getExternalAssetsStorageTemplate() {
+export async function getAssetsExternalStorageTemplate() {
   return [
     'import { createStorage } from \'unstorage\'',
     'import httpDriver from \'unstorage/drivers/http\'',

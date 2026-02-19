@@ -5,7 +5,7 @@ import { createStorage } from 'unstorage'
 import type { Storage } from 'unstorage'
 import type { Nuxt } from '@nuxt/schema'
 import type { ModuleOptions } from './module'
-import { getAssetsStorageDevTemplate, getAssetsStorageTemplate, getExternalAssetsStorageTemplate } from './templates'
+import { getAssetsDefaultStorageDevTemplate, getAssetsDefaultStorageTemplate, getAssetsExternalStorageTemplate } from './templates'
 
 const ASSETS_TEMPLATE = 'studio-assets.mjs'
 const logger = useLogger('nuxt-studio')
@@ -25,7 +25,7 @@ export function setExternalMediaStorage(nuxt: Nuxt, runtime: (...args: string[])
 
   addTemplate({
     filename: ASSETS_TEMPLATE,
-    getContents: () => getExternalAssetsStorageTemplate(),
+    getContents: () => getAssetsExternalStorageTemplate(),
   })
 
   addServerHandler({
@@ -48,8 +48,8 @@ export function setDefaultMediaStorage(nuxt: Nuxt, options: ModuleOptions): Stor
   addTemplate({
     filename: ASSETS_TEMPLATE,
     getContents: () => options.dev
-      ? getAssetsStorageDevTemplate()
-      : getAssetsStorageTemplate(publicAssetsStorage),
+      ? getAssetsDefaultStorageDevTemplate()
+      : getAssetsDefaultStorageTemplate(publicAssetsStorage),
   })
 
   return publicAssetsStorage
