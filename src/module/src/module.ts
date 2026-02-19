@@ -42,18 +42,28 @@ interface MediaUploadOptions {
    * - S3_BUCKET - Bucket name
    * - S3_REGION - Region (optional, defaults to 'auto')
    * - S3_PUBLIC_URL - Public URL for uploaded files
+   *
+   * @default false
    */
   external?: boolean
 
   /**
    * The maximum file size for media uploads.
+   * @default 10 * 1024 * 1024 (10MB)
    */
   maxFileSize?: number
 
   /**
    * The allowed types for media uploads.
+   * @default ['image/*', 'video/*', 'audio/*']
    */
   allowedTypes?: string[]
+
+  /**
+   * The public URL for the media files.
+   * @default process.env.S3_PUBLIC_URL
+   */
+  publicUrl?: string
 }
 
 interface RepositoryOptions {
@@ -340,6 +350,7 @@ export default defineNuxtModule<ModuleOptions>({
     },
     media: {
       external: false,
+      publicUrl: process.env.S3_PUBLIC_URL,
       maxFileSize: 10 * 1024 * 1024,
       allowedTypes: ['image/*', 'video/*', 'audio/*'],
     },

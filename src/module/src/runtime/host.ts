@@ -70,11 +70,12 @@ export function useStudioHost(user: StudioUser, repository: Repository): StudioH
 
   const studioConfig = useRuntimeConfig().public.studio
   const aiConfig = studioConfig.ai
+  const mediaConfig = studioConfig.media
 
   const host: StudioHost = {
     meta: {
       dev: false,
-      media: studioConfig.media,
+      media: mediaConfig,
       ai: {
         enabled: aiConfig?.enabled ?? false,
         experimental: {
