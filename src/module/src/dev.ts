@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 import type { Nuxt } from '@nuxt/schema'
 import type { ViteDevServer } from 'vite'
 import type { Storage } from 'unstorage'
-import { VirtualMediaCollectionName } from 'nuxt-studio/app/utils'
+import { VIRTUAL_MEDIA_COLLECTION_NAME } from 'nuxt-studio/app/utils'
 
 export function setupDevMode(
   nuxt: Nuxt,
@@ -46,7 +46,7 @@ export function setupDevMode(
           server.ws.send({
             type: 'custom',
             event: 'nuxt-studio:media:update',
-            data: { type, id: `${VirtualMediaCollectionName}/${file}` },
+            data: { type, id: `${VIRTUAL_MEDIA_COLLECTION_NAME}/${file}` },
           })
         })
       },

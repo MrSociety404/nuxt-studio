@@ -41,33 +41,22 @@ interface MediaUploadOptions {
    * When enabled, media files are uploaded to S3-compatible storage (AWS S3, Cloudflare R2,
    * MinIO, DigitalOcean Spaces, Backblaze B2, etc.) instead of being committed to Git.
    *
-   * Uses Unstorage S3 driver on server, HTTP driver on client.
-   * Requires implementing server routes:
-   * - POST /api/studio/medias/upload - Upload with validation
-   * - ALL /api/studio/medias/[...path] - Proxy to S3 storage (GET/PUT/DELETE)
-   *
    * Required environment variables:
    * - S3_ACCESS_KEY_ID - Storage access key
    * - S3_SECRET_ACCESS_KEY - Storage secret key
-   * - S3_ENDPOINT - Storage endpoint URL
+   * - S3_ENDPOINT - Storage endpoint URL (e.g. https://<accountid>.r2.cloudflarestorage.com)
    * - S3_BUCKET - Bucket name
    * - S3_REGION - Region (optional, defaults to 'auto')
    * - S3_PUBLIC_URL - Public URL for uploaded files
-   *
-   * See playground/docus/server/api/studio/medias/ for reference implementation.
-   *
-   * @default false
    */
   external?: boolean
   /**
    * Maximum file size in bytes.
-   * @default 10485760 (10MB)
    */
   maxFileSize?: number
   /**
    * Allowed MIME types for upload.
    * Supports wildcards like 'image/*'.
-   * @default ['image/*', 'video/*', 'audio/*']
    */
   allowedTypes?: string[]
 }

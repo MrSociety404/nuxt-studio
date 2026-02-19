@@ -16,7 +16,7 @@ import type {
   DatabaseItem,
   MediaItem,
 } from '../types'
-import { VirtualMediaCollectionName, generateStemFromFsPath } from '../utils/media'
+import { VIRTUAL_MEDIA_COLLECTION_NAME, generateStemFromFsPath } from '../utils/media'
 import { oneStepActions, STUDIO_ITEM_ACTION_DEFINITIONS, twoStepActions, STUDIO_BRANCH_ACTION_DEFINITIONS } from '../utils/context'
 import type { useTree } from './useTree'
 import type { useGitProvider } from './useGitProvider'
@@ -128,7 +128,7 @@ export const useContext = createSharedComposable((
     [StudioItemActionId.CreateMediaFolder]: async (params: CreateFolderParams) => {
       const { fsPath } = params
       const gitkeepFsPath = joinURL(fsPath, '.gitkeep')
-      const gitKeepId = joinURL(VirtualMediaCollectionName, gitkeepFsPath)
+      const gitKeepId = joinURL(VIRTUAL_MEDIA_COLLECTION_NAME, gitkeepFsPath)
       const gitKeepMedia: MediaItem = {
         id: gitKeepId,
         fsPath: gitkeepFsPath,

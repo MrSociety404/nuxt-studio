@@ -1,7 +1,7 @@
 import { prefixStorage } from 'unstorage'
-import { withLeadingSlash } from 'ufo'
+import { joinURL, withLeadingSlash } from 'ufo'
 import { requireStudioAuth } from '../../../utils/studio-auth'
-import { VirtualMediaCollectionName } from 'nuxt-studio/app/utils'
+import { VIRTUAL_MEDIA_COLLECTION_NAME, EXTERNAL_STORAGE_PREFIX } from 'nuxt-studio/app/utils'
 
 export default defineEventHandler(async (event) => {
   await requireStudioAuth(event)
@@ -9,9 +9,9 @@ export default defineEventHandler(async (event) => {
   const { maxFileSize, allowedTypes } = useRuntimeConfig(event).public.studio.media
   const path = event.path.replace('/api/studio/medias/', '')
   console.log('path', path)
-  const key = path.replace(/\//g, ':').replace(new RegExp(`^${VirtualMediaCollectionName}:`), '')
+  const key = path.replace(/\//g, ':').replace(new RegExp(`^${VIRTUAL_MEDIA_COLLECTION_NAME}:`), '')
   console.log('key', key)
-  const storage = prefixStorage(useStorage('s3'), 'studio/')
+  const storage = prefixStorage(useStorage('s3'), `${EXTERNAL_STORAGE_PREFIX}/`)
 
   // GET => getItem / getKeys
   if (event.method === 'GET') {
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Reconstruct media item with S3 public URL (mirrors dev public route pattern)
-    const publicUrl = process.env.S3_PUBLIC_URL
+    const publicUrl = process.env.S3_PUBLIC_URL!
     const fsPath = withLeadingSlash(key.replace(/:/g, '/'))
     console.log('fsPath', fsPath)
     return {
@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
       fsPath,
       extension: fsPath.split('.').pop(),
       stem: fsPath.split('.').slice(0, -1).join('.'),
-      path: `${publicUrl}${fsPath}`,
+      path: joinURL(publicUrl, EXTERNAL_STORAGE_PREFIX, fsPath),
     }
   }
 

@@ -1,6 +1,6 @@
 import { joinURL, withLeadingSlash } from 'ufo'
 import type { DraftItem, StudioHost, MediaItem, RawFile } from '../types'
-import { VirtualMediaCollectionName, generateStemFromFsPath } from '../utils/media'
+import { VIRTUAL_MEDIA_COLLECTION_NAME, generateStemFromFsPath } from '../utils/media'
 import { DraftStatus } from '../types/draft'
 import type { useGitProvider } from './useGitProvider'
 import { createSharedComposable } from './createSharedComposable'
@@ -52,7 +52,7 @@ export const useDraftMedias = createSharedComposable((host: StudioHost, gitProvi
       remoteFile: undefined,
       status: DraftStatus.Created,
       modified: {
-        id: joinURL(VirtualMediaCollectionName, fsPath),
+        id: joinURL(VIRTUAL_MEDIA_COLLECTION_NAME, fsPath),
         fsPath,
         extension: getFileExtension(fsPath),
         stem: generateStemFromFsPath(fsPath),
@@ -78,7 +78,7 @@ export const useDraftMedias = createSharedComposable((host: StudioHost, gitProvi
       const newDbItem: MediaItem = {
         ...currentDbItem,
         fsPath: newFsPath,
-        id: joinURL(VirtualMediaCollectionName, newFsPath),
+        id: joinURL(VIRTUAL_MEDIA_COLLECTION_NAME, newFsPath),
         stem: generateStemFromFsPath(newFsPath),
         path: withLeadingSlash(newFsPath),
       }

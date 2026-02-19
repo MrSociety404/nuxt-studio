@@ -1,4 +1,4 @@
-export { VirtualMediaCollectionName } from './utils/media'
+export { VIRTUAL_MEDIA_COLLECTION_NAME, EXTERNAL_STORAGE_PREFIX } from './utils/media'
 export type { MarkdownParsingOptions } from './types/content'
 export type { GitProviderType } from './types/git'
 export type { ComponentMeta } from './types/component'
