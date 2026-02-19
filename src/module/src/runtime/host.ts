@@ -292,7 +292,6 @@ export function useStudioHost(user: StudioUser, repository: Repository): StudioH
         },
         list: async (): Promise<MediaItem[]> => {
           const storage = getStorage()
-          console.log('storage', storage)
           return await Promise.all(
             await storage.getKeys().then((keys: string[]) =>
               keys.map((key: string) => storage.getItem(key)),
