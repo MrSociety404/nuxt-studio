@@ -160,7 +160,7 @@ importers:
         specifier: ^12.6.2
         version: 12.6.2
       docus:
-        specifier: ^5.5.1
+        specifier: ^5.6.0
         version: 5.6.0(f8ff401fc99aad4d490d328518a5e412)
       nuxt:
         specifier: ^4.3.1
